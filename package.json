@@ -1,0 +1,14 @@
+{
+  "name": "gsheets",
+  "version": "1.0.0",
+  "description": "GSheets API",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "fidilen.com",
+  "license": "ISC",
+  "dependencies": {
+    "googleapis": "^133.0.0"
+  }
+}

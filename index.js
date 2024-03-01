@@ -4,6 +4,12 @@ const { google } = require('googleapis')
 
 const credentials_path = process.env?.GSHEETS_CREDENTIALS || process.cwd() + '/config/credentials.json'
 
+const RENDER_TYPE = {
+    FORMATTED: 'FORMATTED_VALUE',
+    UNFORMATTED: 'UNFORMATTED_VALUE',
+    FORMULA: 'FORMULA'
+}
+
 const GSheets = {}
 
 const auth = new google.auth.GoogleAuth({
@@ -23,10 +29,7 @@ GSheets.select = async (params) => {
     let data = []
     let header = []
 
-    const rows = await sheets.spreadsheets.values.get({
-        spreadsheetId: sheet_id,
-        range: range
-    }).then(res => { return res?.data?.values || [] })
+    const rows = await get({ sheet_id, range })
 
     header = rows.shift()
 
@@ -101,7 +104,7 @@ GSheets.append = async (params) => {
         await sheets.spreadsheets.values.append({
             spreadsheetId: sheetId,
             range: range,
-            valueInputOption: `USER_ENTERED`,
+            valueInputOption: 'USER_ENTERED',
             resource: { values: values }
         })
     } catch (e) {
@@ -114,18 +117,16 @@ GSheets.update = async (params) => {
         let sheet_id = params.sheet_id
         let range = params.range
         let where = params.where || {}
-        let values = params.values || {}
+        let fields = params.fields || {}
 
-        const rows = await sheets.spreadsheets.values.get({
-            spreadsheetId: sheet_id,
-            range: range
-        }).then(res => { return res?.data?.values || [] })
+        const rows = await get({ sheet_id, range })
 
         if (rows.length <= 1) return
 
-        const header = rows?.[0] || []
+        const header = rows[0] || []
 
         const data = rows
+        const values = await get({ sheet_id, range, render_type: RENDER_TYPE.FORMULA })
 
         for (let key of Object.keys(where)) {
             let columnIndex = header.indexOf(key)
@@ -138,15 +139,15 @@ GSheets.update = async (params) => {
 
                 if (row[columnIndex] == criteria) {
 
-                    for (let key of Object.keys(values)) {
+                    for (let key of Object.keys(fields)) {
                         let valueIndex = header.indexOf(key)
 
                         let newRow = row
-                        newRow[valueIndex] = values[key]
+                        newRow[valueIndex] = fields[key]
                         row = newRow
                     }
 
-                    data[i] = row
+                    values[i] = row
                 }
             }
         }
@@ -154,12 +155,26 @@ GSheets.update = async (params) => {
         await sheets.spreadsheets.values.update({
             spreadsheetId: sheet_id,
             range: range,
-            valueInputOption: `RAW`,
-            resource: { values: data },
+            valueInputOption: 'USER_ENTERED',
+            resource: { values: values },
         })
     } catch (e) {
         throw new Error(e);
     }
+}
+
+async function get(params) {
+    let sheet_id = params.sheet_id
+    let range = params.range
+    let render_type = params.render_type || RENDER_TYPE.FORMATTED
+
+    const data = await sheets.spreadsheets.values.get({
+        spreadsheetId: sheet_id,
+        range: range,
+        valueRenderOption: render_type
+    }).then(res => { return res?.data?.values || [] })
+
+    return data
 }
 
 module.exports = GSheets

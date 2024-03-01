@@ -154,28 +154,34 @@ GSheets.update = async (params) => {
     const data = rows
     const values = await get({ sheet_id, range, render_type: RENDER_TYPE.FORMULA })
 
-    for (let key of Object.keys(where)) {
-        let columnIndex = header.indexOf(key)
-        let criteria = where[key]
+    let header_index = await mapIndex(header, where)
 
-        if (columnIndex == -1) continue
 
-        for (let i = 1; i < data.length; i++) {
-            let row = data[i]
+    for (let i = 1; i <= data.length; i++) {
+        let row = data[i]
+        let hits = []
 
-            if (row[columnIndex] == criteria) {
-
-                for (let key of Object.keys(fields)) {
-                    let valueIndex = header.indexOf(key)
-
-                    let newRow = row
-                    newRow[valueIndex] = fields[key]
-                    row = newRow
-                }
-
-                values[i] = row
+        for (let key of Object.keys(where)) {
+            if (where[key] == row?.[header_index[key]]) {
+                hits.push(true)
+            } else {
+                hits.push(false)
             }
         }
+
+        if (!hits.includes(false)) {
+            for (let key of Object.keys(fields)) {
+                let valueIndex = header.indexOf(key)
+
+                let newRow = row
+                newRow[valueIndex] = fields[key]
+                row = newRow
+            }
+
+            values[i] = row
+        }
+
+        hits = []
     }
 
     await update({ sheet_id, range, values })
@@ -194,22 +200,13 @@ GSheets.delete = async (params) => {
     const data = rows
     const values = await get({ sheet_id, range, render_type: RENDER_TYPE.FORMULA })
 
-    let header_index = {}
-
-    for (let key of Object.keys(where)) {
-        let columnIndex = header.indexOf(key)
-
-        if (columnIndex == -1) continue
-
-        header_index[key] = columnIndex
-    }
+    let header_index = await mapIndex(header, where)
 
     for (let i = 1; i <= data.length; i++) {
         let row = data[i]
         let hits = []
 
         for (let key of Object.keys(where)) {
-
             if (where[key] == row?.[header_index[key]]) {
                 hits.push(true)
             } else {
@@ -252,6 +249,20 @@ async function update(params) {
         valueInputOption: 'USER_ENTERED',
         resource: { values: values },
     })
+}
+
+async function mapIndex(header, where) {
+    let header_index = {}
+
+    for (let key of Object.keys(where)) {
+        let columnIndex = header.indexOf(key)
+
+        if (columnIndex == -1) continue
+
+        header_index[key] = columnIndex
+    }
+
+    return header_index
 }
 
 module.exports = GSheets

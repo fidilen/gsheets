@@ -158,7 +158,7 @@ GSheets.update = async (params) => {
 
     for (let i = 1; i <= data.length; i++) {
         let row = data[i]
-        let hits = await criteriaHits(row, where, header_index)
+        let hits = await hit(row, where, header_index)
 
         if (!hits.includes(false)) {
             for (let key of Object.keys(fields)) {
@@ -195,7 +195,7 @@ GSheets.delete = async (params) => {
 
     for (let i = 1; i <= data.length; i++) {
         let row = data[i]
-        let hits = await criteriaHits(row, where, header_index)
+        let hits = await hit(row, where, header_index)
 
         if (!hits.includes(false)) {
             values[i] = Array(header.length).fill('')
@@ -234,7 +234,7 @@ async function update(params) {
     })
 }
 
-async function criteriaHits(row, where, header_index) {
+async function hit(row, where, header_index) {
     let hits = []
 
     for (let key of Object.keys(where)) {

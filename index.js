@@ -156,7 +156,6 @@ GSheets.update = async (params) => {
 
     let header_index = await mapIndex(header, where)
 
-
     for (let i = 1; i <= data.length; i++) {
         let row = data[i]
         let hits = await criteriaHits(row, where, header_index)

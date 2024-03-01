@@ -159,15 +159,7 @@ GSheets.update = async (params) => {
 
     for (let i = 1; i <= data.length; i++) {
         let row = data[i]
-        let hits = []
-
-        for (let key of Object.keys(where)) {
-            if (where[key] == row?.[header_index[key]]) {
-                hits.push(true)
-            } else {
-                hits.push(false)
-            }
-        }
+        let hits = await criteriaHits(row, where, header_index)
 
         if (!hits.includes(false)) {
             for (let key of Object.keys(fields)) {
@@ -204,15 +196,7 @@ GSheets.delete = async (params) => {
 
     for (let i = 1; i <= data.length; i++) {
         let row = data[i]
-        let hits = []
-
-        for (let key of Object.keys(where)) {
-            if (where[key] == row?.[header_index[key]]) {
-                hits.push(true)
-            } else {
-                hits.push(false)
-            }
-        }
+        let hits = await criteriaHits(row, where, header_index)
 
         if (!hits.includes(false)) {
             values[i] = Array(header.length).fill('')
@@ -249,6 +233,20 @@ async function update(params) {
         valueInputOption: 'USER_ENTERED',
         resource: { values: values },
     })
+}
+
+async function criteriaHits(row, where, header_index) {
+    let hits = []
+
+    for (let key of Object.keys(where)) {
+        if (where[key] == row?.[header_index[key]]) {
+            hits.push(true)
+        } else {
+            hits.push(false)
+        }
+    }
+
+    return hits
 }
 
 async function mapIndex(header, where) {

@@ -97,16 +97,32 @@ GSheets.select = async (params) => {
 
 GSheets.append = async (params) => {
     try {
-        const sheetId = params.sheet_id
+        const sheet_id = params.sheet_id
         const range = params.range
-        const values = params.values
+        const records = params.records
 
-        await sheets.spreadsheets.values.append({
-            spreadsheetId: sheetId,
-            range: range,
-            valueInputOption: 'USER_ENTERED',
-            resource: { values: values }
-        })
+        const rows = await get({ sheet_id, range, render_type: RENDER_TYPE.FORMULA })
+
+        if (rows.length < 1) throw new Error("No header found.")
+
+        const header = rows[0] || []
+        const data = rows
+
+        for (let record of records) {
+            let newRow = []
+
+            for (let key of header) {
+                let value = record[key] || ''
+
+                newRow.push(value)
+            }
+
+            data.push(newRow)
+        }
+
+        console.log(data)
+
+        await update({ sheet_id, range, values: data })
     } catch (e) {
         throw new Error(e);
     }
@@ -121,10 +137,9 @@ GSheets.update = async (params) => {
 
         const rows = await get({ sheet_id, range })
 
-        if (rows.length <= 1) return
+        if (rows.length < 1) throw new Error("No header found.")
 
         const header = rows[0] || []
-
         const data = rows
         const values = await get({ sheet_id, range, render_type: RENDER_TYPE.FORMULA })
 
@@ -152,12 +167,7 @@ GSheets.update = async (params) => {
             }
         }
 
-        await sheets.spreadsheets.values.update({
-            spreadsheetId: sheet_id,
-            range: range,
-            valueInputOption: 'USER_ENTERED',
-            resource: { values: values },
-        })
+        await update({ sheet_id, range, values })
     } catch (e) {
         throw new Error(e);
     }
@@ -175,6 +185,19 @@ async function get(params) {
     }).then(res => { return res?.data?.values || [] })
 
     return data
+}
+
+async function update(params) {
+    let sheet_id = params.sheet_id
+    let range = params.range
+    let values = params.values
+
+    await sheets.spreadsheets.values.update({
+        spreadsheetId: sheet_id,
+        range: range,
+        valueInputOption: 'USER_ENTERED',
+        resource: { values: values },
+    })
 }
 
 module.exports = GSheets

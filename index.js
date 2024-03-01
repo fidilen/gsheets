@@ -181,6 +181,52 @@ GSheets.update = async (params) => {
     await update({ sheet_id, range, values })
 }
 
+GSheets.delete = async (params) => {
+    let sheet_id = params.sheet_id
+    let range = params.range
+    let where = params.where || {}
+
+    const rows = await get({ sheet_id, range })
+
+    if (rows.length < 1) throw new Error("No header found.")
+
+    const header = rows[0] || []
+    const data = rows
+    const values = await get({ sheet_id, range, render_type: RENDER_TYPE.FORMULA })
+
+    let header_index = {}
+
+    for (let key of Object.keys(where)) {
+        let columnIndex = header.indexOf(key)
+
+        if (columnIndex == -1) continue
+
+        header_index[key] = columnIndex
+    }
+
+    for (let i = 1; i <= data.length; i++) {
+        let row = data[i]
+        let hits = []
+
+        for (let key of Object.keys(where)) {
+
+            if (where[key] == row?.[header_index[key]]) {
+                hits.push(true)
+            } else {
+                hits.push(false)
+            }
+        }
+
+        if (!hits.includes(false)) {
+            values[i] = Array(header.length).fill('')
+        }
+
+        hits = []
+    }
+
+    await update({ sheet_id, range, values })
+}
+
 async function get(params) {
     let sheet_id = params.sheet_id
     let range = params.range

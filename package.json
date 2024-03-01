@@ -1,5 +1,5 @@
 {
-  "name": "gsheets",
+  "name": "@fidilen/gsheets",
   "version": "1.0.0",
   "description": "GSheets API",
   "main": "index.js",
@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "fidilen.com",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "googleapis": "^133.0.0"
   }

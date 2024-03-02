@@ -1,7 +1,9 @@
 # gsheets
-GSheets API
+## GSheets API
 
-.env
+Default: `/config/credentials.json`
+
+**.env**
 ```
 GSHEETS_CREDENTIALS=/path/to/credentials.json
 ```
@@ -30,6 +32,7 @@ await GSheets.prepend({
     range: RANGE,
     where: {...}
 })
+```
 
 ```js
 await GSheets.append({

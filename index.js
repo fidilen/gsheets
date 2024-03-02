@@ -133,7 +133,7 @@ GSheets.append = async (params) => {
         let rowIndex = -1
 
         if (insert) {
-            rowIndex = data.findIndex(row => row.length == 0)
+            rowIndex = data.findIndex(row => !row.find(elem => elem != ''))
         }
 
         if (rowIndex != -1) {
@@ -230,11 +230,30 @@ async function get(params) {
     let range = params.range
     let render_type = params.render_type || RENDER_TYPE.FORMATTED
 
-    const data = await sheets.spreadsheets.values.get({
+    let rows = await sheets.spreadsheets.values.get({
         spreadsheetId: sheet_id,
         range: range,
         valueRenderOption: render_type
     }).then(res => { return res?.data?.values || [] })
+
+    if (rows?.length < 1) return []
+
+    const header = rows[0] || []
+    const data = []
+
+    for (let row of rows) {
+        let newRow = []
+
+        for (let i = 0; i < header.length; i++) {
+            if (row[i]) {
+                newRow.push(row[i])
+            } else {
+                newRow.push('')
+            }
+        }
+
+        data.push(newRow)
+    }
 
     return data
 }

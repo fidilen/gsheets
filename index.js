@@ -101,18 +101,25 @@ GSheets.insert = async (params) => {
     await GSheets.append(params)
 }
 
+GSheets.prepend = async (params) => {
+    params['prepend'] = true
+
+    await GSheets.append(params)
+}
+
 GSheets.append = async (params) => {
     const sheet_id = params.sheet_id
     const range = params.range
     const records = params.records
     const insert = params.insert || false
+    const prepend = params.prepend || false
 
     const rows = await get({ sheet_id, range, render_type: RENDER_TYPE.FORMULA })
 
     if (rows.length < 1) throw new Error("No header found.")
 
     const header = rows[0] || []
-    const data = rows
+    let data = rows
 
     for (let record of records) {
         let newRow = []
@@ -132,9 +139,20 @@ GSheets.append = async (params) => {
         if (rowIndex != -1) {
             data[rowIndex] = newRow
         } else {
-            data.push(newRow)
-        }
+            if (prepend) {
+                let temp = []
+                temp.push(header)
+                temp.push(newRow)
 
+                for (let i = 1; i < data.length; i++) {
+                    temp.push(data[i])
+                }
+
+                data = temp
+            } else {
+                data.push(newRow)
+            }
+        }
     }
 
     await update({ sheet_id, range, values: data })

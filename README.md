@@ -25,6 +25,13 @@ await GSheets.insert({
 ```
 
 ```js
+await GSheets.prepend({
+    sheet_id: SHEET_ID,
+    range: RANGE,
+    where: {...}
+})
+
+```js
 await GSheets.append({
     sheet_id: SHEET_ID,
     range: RANGE,
